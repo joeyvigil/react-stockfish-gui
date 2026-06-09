@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # React Stockfish Gui
 
 This app communicates with the stockfish API to get engine moves
@@ -9,7 +8,7 @@ https://joeyvigil.github.io/react-stockfish-gui/
 
 =======
 
-# Stockfish API GUI
+# Stockish API GUI
 
 Chess analysis frontend powered by Stockfish.
 
