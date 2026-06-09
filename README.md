@@ -6,12 +6,6 @@ This app communicates with the stockfish API to get engine moves
 
 https://joeyvigil.github.io/react-stockfish-gui/
 
-=======
-
-# Stockish API GUI
-
-Chess analysis frontend powered by Stockfish.
-
 ## Local Development
 
 ```sh
@@ -76,4 +70,3 @@ sudo nginx -t && sudo systemctl reload nginx
 Open `http://<PUBLIC_IP>` in your browser.
 
 > **Note:** This is a static frontend. If your app relies on a backend API running on a specific port, adjust the security group rules and Nginx proxy config accordingly.
->>>>>>> b9a220b (add AWS EC2 deployment instructions)
