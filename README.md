@@ -1,16 +1,10 @@
-# React Stockfish Gui
+# React Stockfish GUI
 
-This app communicates with the stockfish API to get engine moves
+Chess analysis frontend powered by the public Stockfish API at `https://stockfish.online/api/s/v2.php`.
 
-## gh pages link
+## GitHub Pages
 
-https://joeyvigil.github.io/react-stockfish-gui/
-
-=======
-
-# Stockish API GUI
-
-Chess analysis frontend powered by Stockfish.
+Live site: https://joeyvigil.github.io/react-stockfish-gui/
 
 ## Local Development
 
@@ -19,61 +13,86 @@ npm install
 npm run dev
 ```
 
-## Deploy on AWS EC2
+## Deploy with AWS EC2
 
-### 1. Launch EC2 Instance
+This app builds to static files, so EC2 deployment is just: build the Vite app, copy `dist/` to Nginx, and let Nginx serve `index.html` for SPA routes.
 
-- AMI: **Ubuntu 24.04 LTS** (or Amazon Linux 2023)
-- Instance type: `t2.micro` (free tier eligible)
-- Security group: allow **HTTP (80)** and **HTTPS (443)** from `0.0.0.0/0`, plus **SSH (22)** from your IP
-- Storage: **8 GiB gp3** is sufficient
+Important: the default Vite config uses the GitHub Pages base path `/react-stockfish-gui/`. For EC2, build with `--base=/` so asset URLs resolve from the server root.
 
-### 2. Connect & Install Dependencies
+### 1. Launch the instance
+
+- AMI: Ubuntu 24.04 LTS
+- Instance type: `t2.micro` or `t3.micro`
+- Storage: 8 GiB is enough
+- Security group: allow `22` from your IP, `80` from anywhere, and `443` from anywhere if you plan to add TLS
+
+### 2. Install Node, Nginx, and Git
 
 ```sh
-ssh -i your-key.pem ubuntu@<PUBLIC_IP>
+ssh -i your-key.pem ubuntu@<EC2_PUBLIC_IP>
 
-sudo apt update && sudo apt upgrade -y
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg nginx git
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs nginx git
+sudo apt install -y nodejs
+node -v
+npm -v
 ```
 
-### 3. Clone & Build
+### 3. Clone and build for EC2
 
 ```sh
-git clone https://github.com/YOUR_USER/stockfish-api-gui.git
-cd stockfish-api-gui
+git clone https://github.com/joeyvigil/react-stockfish-gui.git
+cd react-stockfish-gui
 npm install
-npm run build
+npm run build -- --base=/
 ```
 
-### 4. Serve with Nginx
+### 4. Publish the static build
 
 ```sh
+sudo rm -rf /var/www/html/*
 sudo cp -r dist/* /var/www/html/
 sudo chown -R www-data:www-data /var/www/html/
 ```
 
-Configure Nginx:
+### 5. Configure Nginx for the SPA
 
 ```sh
 sudo tee /etc/nginx/sites-available/default > /dev/null <<'EOF'
 server {
     listen 80;
     server_name _;
+
     root /var/www/html;
     index index.html;
+
     location / {
-        try_files $uri /index.html;
+        try_files $uri $uri/ /index.html;
     }
 }
 EOF
-sudo nginx -t && sudo systemctl reload nginx
+
+sudo nginx -t
+sudo systemctl enable nginx
+sudo systemctl reload nginx
 ```
 
-### 5. Access
+### 6. Open the site
 
-Open `http://<PUBLIC_IP>` in your browser.
+Visit `http://<EC2_PUBLIC_IP>`.
 
-> **Note:** This is a static frontend. If your app relies on a backend API running on a specific port, adjust the security group rules and Nginx proxy config accordingly.
->>>>>>> b9a220b (add AWS EC2 deployment instructions)
+## Updating the EC2 deployment
+
+When you push new changes:
+
+```sh
+cd ~/react-stockfish-gui
+git pull
+npm install
+npm run build -- --base=/
+sudo rm -rf /var/www/html/*
+sudo cp -r dist/* /var/www/html/
+sudo systemctl reload nginx
+```
+
